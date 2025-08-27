@@ -1,0 +1,21 @@
+name: fly.io Deploy
+on:
+  workflow_run:
+    workflows: ["fly.io Build"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy app to fly.io
+    runs-on: ubuntu-22.04
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        !contains(github.event.workflow_run.pull_requests[0].labels.*.name, 'preview-debug')
+      )
+    steps:
+      - run: echo "Deploying app..."
