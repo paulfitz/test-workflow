@@ -29,6 +29,7 @@ jobs:
       # tricky because we don't have direct access to the full pr context in this job,
       # unlike during the build.
       - name: Check preview-debug label
+        id: check
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
