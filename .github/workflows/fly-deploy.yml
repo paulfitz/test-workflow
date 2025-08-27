@@ -1,18 +1,34 @@
+# Follow-up of fly-build, with access to secrets for making deployments.
+# This workflow runs in the target repo context. It does not, and should never execute user-supplied code.
+# See https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+
 name: fly.io Deploy
 on:
   workflow_run:
     workflows: ["fly.io Build"]
     types:
       - completed
+
+  # Allows running this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy app to fly.io
     runs-on: ubuntu-22.04
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success'
+      )
     steps:
+      # Skip automatically deploying after a build if there is a preview-debug label.
+      # It is hard to debug a new version of deployment script if old one is automatically
+      # running, especially with the docker image deletion step in there. This is a little
+      # tricky because we don't have direct access to the full pr context in this job,
+      # unlike during the build.
       - name: Check preview-debug label
-        id: check
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -29,6 +45,36 @@ jobs:
               });
               core.setOutput('skip', labels.some(l => l.name === 'preview-debug').toString());
             }
-      - name: Deploy
+
+      - name: Checkout repository
         if: steps.check.outputs.skip != 'true'
-        run: echo "Deploying..."
+        uses: actions/checkout@v4
+
+      - name: Set up flyctl
+        if: steps.check.outputs.skip != 'true'
+        #uses: superfly/flyctl-actions/setup-flyctl@master
+        #with:
+        #  version: 0.2.72
+        run: echo hi
+
+      - name: Download artifacts
+        if: steps.check.outputs.skip != 'true'
+        run: echo hi
+
+      - name: Extract artifacts
+        if: steps.check.outputs.skip != 'true'
+        id: extract_artifacts
+        run: echo hi
+
+      - name: Load Docker image
+        if: steps.check.outputs.skip != 'true'
+        run: echo hi
+
+      - name: Deploy to fly.io
+        if: steps.check.outputs.skip != 'true'
+        id: fly_deploy
+        run: echo hi
+
+      - name: Comment on PR
+        if: steps.check.outputs.skip != 'true'
+        run: echo hi
