@@ -1,0 +1,17 @@
+name: fly.io Build
+on:
+  pull_request:
+    branches: [master]
+    types: [labeled, opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-22.04
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'preview'))
+    steps:
+      - run: echo "Building image..."
